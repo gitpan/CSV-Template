@@ -6,9 +6,20 @@ use warnings;
 
 use HTML::Template;
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 use base "HTML::Template";
+
+sub quote_string {
+    my ($self, $string) = @_;
+    # escape embedded double 
+    # quotes as two quotes
+    $string =~ s/"/""/g; 			# "
+    # since this is being called
+    # we assume the do want to
+    # quote the string
+    return ('"' . $string . '"');
+}
 
 sub output {
     my ($self) = @_;
@@ -35,7 +46,7 @@ CSV::Template - A CSV templating module derived from HTML::Template
 
   my $csv = CSV::Template->new(filename => "t/test.tmpl");
 
-  $csv->param(report_title => "My Report");
+  $csv->param(report_title => $csv->quote_string('My "Report"'));
   $csv->param(report_data => [
           { a1 => 1, b1 => 2, c1 => 3 },
           { a2 => 2, b2 => 4, c2 => 6 },
@@ -52,24 +63,28 @@ Now this is by no means a full-features CSV templating system. Currently it serv
 
 =head1 METHODS
 
-It is best to refer to the B<HTML::Template> docs, we only implement one method here.
+It is best to refer to the B<HTML::Template> docs, we only implement one method here, and override another.
 
 =over 4
 
-=item output
+=item B<quote_string ($string_to_quote)>
+
+This method can be used to quote strings with embedded comma's (they must be quoted properly so as not to be confused with the comma delimiter). In addition it handles strings which themselves have embedded double quotes. It returns the quoted string.
+
+=item B<output>
 
 We do some post processing of the normal B<HTML::Template> output here to make sure our display comes out correctly, by basically removing any totally blank lines from our output.
 
 The reason for this is that when writing code for a template it is more convient to do this:
 
-  E<lt>TMPL_LOOP NAME="test_loop"E<gt>
-  E<lt>TMPL_VAR NAME="one"E<gt>,E<lt>TMPL_VAR NAME="two"E<gt>,E<lt>TMPL_VAR NAME="three"E<gt>,
-  E<lt>/TMPL_LOOPE<gt>
+  <TMPL_LOOP NAME="test_loop">
+  <TMPL_VAR NAME="one">,<TMPL_VAR NAME="two">,<TMPL_VAR NAME="three">,
+  </TMPL_LOO>
 
 Than it is to have to do this:
 
-  E<lt>TMPL_LOOP NAME="test_loop"E<gt>E<lt>TMPL_VAR NAME="one"E<gt>,E<lt>TMPL_VAR NAME="two"E<gt>,E<lt>TMPL_VAR NAME="three"E<gt>,
-  </TMPL_LOOPE<gt>
+  <TMPL_LOOP NAME="test_loop"><TMPL_VAR NAME="one">,<TMPL_VAR NAME="two">,<TMPL_VAR NAME="three">,
+  </TMPL_LOOP>
 
 The first example would normally leave an extra line in the output as a consequence of formating our template code the way we did. The second example avoids that problem, but at the sacrifice of clarity (in my opinion of course). 
 
@@ -79,7 +94,7 @@ To remedy this problem, I decided that any empty lines should be removed from th
 
 =head1 CAVEAT
 
-This module makes no attempt to handle strings with embedded commas, that is the responsibilty of the template author. Personally I recommend quoting all strings in your output, just to be safe. More advanced string handling for parameters is on my L<TO DO> list.
+This module makes no attempt to automatically quote strings with embedded commas, that is the responsibilty of the user. More automated string handling is on my L<TO DO> list.
 
 =head1 TO DO
 
@@ -91,9 +106,9 @@ This is really just a quick fix for now, it serves my current needs. But that is
 
 It would be nice if we could pad lines to a constant width, so that all the lines were of equal length. This would be useful when using this to prepare files for insertion into a database, etc. It shouldnt be too hard to accomplish.
 
-=item Add string handling features
+=item Automatic string handling features
 
-In a CSV file, strings with embedded comma's must be quoted properly so as not to confuse the CSV reader. This also raises the issue of quoting strings, which themselves have embedded quotes. I would like to handle this in the code, so the template author and creater of the data-structure do not have to. Unfortunately I don't know enough yet about the inner workings of HTML::Template to do that, so it will have to wait.
+I would like to handle this in the code, so the template author and creater of the data-structure do not have to. Unfortunately I don't know enough yet about the inner workings of HTML::Template to do that, so it will have to wait.
 
 =back
 
@@ -116,31 +131,29 @@ I use B<Devel::Cover> to test the code coverage of my tests, below is the B<Deve
 
 Keep in mind this module only overrides one method in HTML::Template, so there is not much to cover here.
 
+=head1 OTHER CSV MODULES
+
+There are also a number of other CSV related modules out there, here are a few of the more file/persistence-related that I looked at before eventually creating this module.
+
+=over 4
+
+=item B<DBD::CSV>
+
+This was very much overkill for my needs, but maybe not for yours.
+
+=item B<Tie::CSV_File>
+
+This uses C<tie>, which I am not a fan of, to map arrays of arrays to a CSV file. It would not handle my HTML::Template data structures, but if that is not a requirement of yours, give it a look.
+
+=back
+
 =head1 SEE ALSO
 
 =over 4
 
-=item HTML::Template
+=item B<HTML::Template>
 
 This module is a subclass of HTML::Template, so if you want to know how to use it you will need to refer to that module's excellent documentation.
-
-=back
-
-There are also a number of other CSV related modules out there, here are a few that I looked at while trying to solve the issue that lead to the creation of this module.
-
-=over 4
-
-=item Excel::Template
-
-This module is an effort to use HTML::Template data structures to generate Excel files. I looked at this module, but it is much more than I needed, so I created this. That said, if your needs are more complex than CSV::Template can solve, I suggest looking into this module.
-
-=item DBD::CSV
-
-This was very much overkill for my needs, but maybe not for yours.
-
-=item Tie::CSV_File
-
-This uses C<tie>, which I am not a fan of, to map arrays of arrays to a CSV file. It would not handle my HTML::Template data structures, but if that is not a requirement of your, give it a look.
 
 =back
 

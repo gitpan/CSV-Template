@@ -4,9 +4,7 @@ package CSV::Template;
 use strict;
 use warnings;
 
-use HTML::Template;
-
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 use base "HTML::Template";
 
@@ -44,13 +42,13 @@ CSV::Template - A CSV templating module derived from HTML::Template
 
   use CSV::Template;
 
-  my $csv = CSV::Template->new(filename => "t/test.tmpl");
+  my $csv = CSV::Template->new(filename => "templates/test.tmpl");
 
   $csv->param(report_title => $csv->quote_string('My "Report"'));
   $csv->param(report_data => [
-          { a1 => 1, b1 => 2, c1 => 3 },
-          { a2 => 2, b2 => 4, c2 => 6 },
-          { a3 => 3, b3 => 6, c3 => 9 },
+            { one => 1, two => 2, three => 3 },
+            { one => 2, two => 4, three => 6 },
+            { one => 3, two => 6, three => 9 },     
           ]);
 
   print $csv->output();
@@ -77,13 +75,13 @@ We do some post processing of the normal B<HTML::Template> output here to make s
 
 The reason for this is that when writing code for a template it is more convient to do this:
 
-  <TMPL_LOOP NAME="test_loop">
+  <TMPL_LOOP NAME="report_data">
   <TMPL_VAR NAME="one">,<TMPL_VAR NAME="two">,<TMPL_VAR NAME="three">,
-  </TMPL_LOO>
+  </TMPL_LOOP>
 
 Than it is to have to do this:
 
-  <TMPL_LOOP NAME="test_loop"><TMPL_VAR NAME="one">,<TMPL_VAR NAME="two">,<TMPL_VAR NAME="three">,
+  <TMPL_LOOP NAME="report_data"><TMPL_VAR NAME="one">,<TMPL_VAR NAME="two">,<TMPL_VAR NAME="three">,
   </TMPL_LOOP>
 
 The first example would normally leave an extra line in the output as a consequence of formating our template code the way we did. The second example avoids that problem, but at the sacrifice of clarity (in my opinion of course). 
